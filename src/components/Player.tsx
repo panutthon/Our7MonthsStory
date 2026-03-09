@@ -8,7 +8,7 @@ export default function Player() {
   const visualRef = useRef<Group>(null);
 
   useFrame(() => {
-    const { playerLane, isJumping, jumpProgress, isSliding } =
+    const { playerLane, isJumping, jumpProgress, isSliding, jumpPower } =
       useGameStore.getState();
 
     if (!groupRef.current) return;
@@ -20,7 +20,8 @@ export default function Player() {
 
     // Jump arc — move the whole group up
     if (isJumping) {
-      groupRef.current.position.y = Math.sin(jumpProgress * Math.PI) * 3.5;
+      groupRef.current.position.y =
+        Math.sin(jumpProgress * Math.PI) * jumpPower;
     } else {
       groupRef.current.position.y += (0 - groupRef.current.position.y) * 0.2;
     }

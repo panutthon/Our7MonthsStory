@@ -133,32 +133,58 @@ export default function UIOverlay() {
       {/* Mobile controls */}
       {status === "playing" && (
         <div className="mobile-controls">
-          <button
-            className="mobile-btn left-btn"
-            onTouchStart={() => useGameStore.getState().moveLeft()}
-          >
-            ⬅️
-          </button>
-          <div className="vertical-btns">
+          <div className="mobile-controls-left">
+            <button
+              className="mobile-btn left-btn"
+              onTouchStart={(e) => {
+                e.preventDefault();
+                useGameStore.getState().moveLeft();
+              }}
+            >
+              ⬅️
+            </button>
+            <button
+              className="mobile-btn right-btn"
+              onTouchStart={(e) => {
+                e.preventDefault();
+                useGameStore.getState().moveRight();
+              }}
+            >
+              ➡️
+            </button>
+          </div>
+          <div className="mobile-controls-right">
             <button
               className="mobile-btn up-btn"
-              onTouchStart={() => useGameStore.getState().jump()}
+              onTouchStart={(e) => {
+                e.preventDefault();
+                useGameStore.getState().jump();
+                useGameStore.getState().setJumpHeld(true);
+              }}
+              onTouchEnd={(e) => {
+                e.preventDefault();
+                useGameStore.getState().setJumpHeld(false);
+              }}
+              onTouchCancel={() => useGameStore.getState().setJumpHeld(false)}
             >
               ⬆️
             </button>
             <button
               className="mobile-btn down-btn"
-              onTouchStart={() => useGameStore.getState().slide()}
+              onTouchStart={(e) => {
+                e.preventDefault();
+                useGameStore.getState().slide();
+                useGameStore.getState().setSlideHeld(true);
+              }}
+              onTouchEnd={(e) => {
+                e.preventDefault();
+                useGameStore.getState().setSlideHeld(false);
+              }}
+              onTouchCancel={() => useGameStore.getState().setSlideHeld(false)}
             >
               ⬇️
             </button>
           </div>
-          <button
-            className="mobile-btn right-btn"
-            onTouchStart={() => useGameStore.getState().moveRight()}
-          >
-            ➡️
-          </button>
         </div>
       )}
     </div>

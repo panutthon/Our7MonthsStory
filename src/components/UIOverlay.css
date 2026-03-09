@@ -360,41 +360,49 @@
 /* Mobile Controls */
 .mobile-controls {
   position: absolute;
-  bottom: 30px;
+  bottom: 24px;
   left: 0;
   right: 0;
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding: 0 24px;
+}
+
+.mobile-controls-left {
+  display: flex;
+  gap: 16px;
   align-items: center;
-  gap: 20px;
-  padding: 0 20px;
+}
+
+.mobile-controls-right {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
 }
 
 .mobile-btn {
-  width: 60px;
-  height: 60px;
+  width: 74px;
+  height: 74px;
   border-radius: 50%;
-  border: 2px solid rgba(255, 105, 180, 0.6);
-  background: rgba(255, 105, 180, 0.2);
-  backdrop-filter: blur(5px);
-  font-size: 24px;
+  border: 2.5px solid rgba(255, 105, 180, 0.6);
+  background: rgba(255, 105, 180, 0.25);
+  backdrop-filter: blur(8px);
+  font-size: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .mobile-btn:active {
   background: rgba(255, 105, 180, 0.5);
-  transform: scale(0.9);
-}
-
-.vertical-btns {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  transform: scale(0.92);
 }
 
 /* Hide mobile controls on desktop */

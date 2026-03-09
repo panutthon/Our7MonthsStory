@@ -86,7 +86,7 @@ export default function Hearts() {
   });
 
   return (
-    <instancedMesh ref={meshRef} args={[heartGeo, undefined, 30]}>
+    <instancedMesh ref={meshRef} args={[heartGeo, undefined, 100]}>
       <meshStandardMaterial
         color="#FF1493"
         emissive="#FF69B4"

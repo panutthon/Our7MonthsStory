@@ -106,8 +106,10 @@ function KeyboardControls() {
   const moveRight = useGameStore((s) => s.moveRight);
   const jump = useGameStore((s) => s.jump);
   const slide = useGameStore((s) => s.slide);
+  const setJumpHeld = useGameStore((s) => s.setJumpHeld);
+  const setSlideHeld = useGameStore((s) => s.setSlideHeld);
 
-  const handleKey = useCallback(
+  const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       switch (e.key) {
         case "ArrowLeft":
@@ -125,21 +127,46 @@ function KeyboardControls() {
         case "W":
         case " ":
           jump();
+          setJumpHeld(true);
           break;
         case "ArrowDown":
         case "s":
         case "S":
           slide();
+          setSlideHeld(true);
           break;
       }
     },
-    [moveLeft, moveRight, jump, slide],
+    [moveLeft, moveRight, jump, slide, setJumpHeld, setSlideHeld],
+  );
+
+  const handleKeyUp = useCallback(
+    (e: KeyboardEvent) => {
+      switch (e.key) {
+        case "ArrowUp":
+        case "w":
+        case "W":
+        case " ":
+          setJumpHeld(false);
+          break;
+        case "ArrowDown":
+        case "s":
+        case "S":
+          setSlideHeld(false);
+          break;
+      }
+    },
+    [setJumpHeld, setSlideHeld],
   );
 
   useEffect(() => {
-    window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
-  }, [handleKey]);
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+    };
+  }, [handleKeyDown, handleKeyUp]);
 
   return null;
 }

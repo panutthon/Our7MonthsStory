@@ -3,9 +3,9 @@ import { create } from "zustand";
 export const LANE_WIDTH = 4;
 export const LANES = [-LANE_WIDTH, 0, LANE_WIDTH];
 export const PLAYER_SPEED = 0.35;
-export const OBSTACLE_SPEED = 0.6;
-export const SPAWN_INTERVAL = 60; // frames between spawns
-export const HEART_SPAWN_INTERVAL = 90;
+export const OBSTACLE_SPEED = 0.5;
+export const SPAWN_INTERVAL = 80; // frames between spawns
+export const HEART_SPAWN_INTERVAL = 70;
 
 export interface Obstacle {
   id: number;
@@ -45,7 +45,10 @@ interface GameState {
   isJumping: boolean;
   isSliding: boolean;
   jumpProgress: number;
+  jumpPower: number;
+  isJumpHeld: boolean;
   slideProgress: number;
+  isSlideHeld: boolean;
   obstacles: Obstacle[];
   hearts: Heart[];
   frameCount: number;
@@ -64,7 +67,9 @@ interface GameState {
   moveLeft: () => void;
   moveRight: () => void;
   jump: () => void;
+  setJumpHeld: (held: boolean) => void;
   slide: () => void;
+  setSlideHeld: (held: boolean) => void;
   tick: () => void;
   selectReward: (reward: RewardType) => void;
   claimReward: () => void;
@@ -79,7 +84,10 @@ export const useGameStore = create<GameState>((set, get) => ({
   isJumping: false,
   isSliding: false,
   jumpProgress: 0,
+  jumpPower: 3.5,
+  isJumpHeld: false,
   slideProgress: 0,
+  isSlideHeld: false,
   obstacles: [],
   hearts: [],
   frameCount: 0,
@@ -102,7 +110,10 @@ export const useGameStore = create<GameState>((set, get) => ({
       isJumping: false,
       isSliding: false,
       jumpProgress: 0,
+      jumpPower: 3.5,
+      isJumpHeld: false,
       slideProgress: 0,
+      isSlideHeld: false,
       obstacles: [],
       hearts: [],
       frameCount: 0,
@@ -142,6 +153,15 @@ export const useGameStore = create<GameState>((set, get) => ({
     set({ isSliding: true, slideProgress: 0 });
   },
 
+  setJumpHeld: (held: boolean) => {
+    set({ isJumpHeld: held });
+  },
+
+  setSlideHeld: (held: boolean) => {
+    // When releasing hold, if currently sliding let it finish naturally
+    set({ isSlideHeld: held });
+  },
+
   tick: () => {
     const state = get();
     if (state.status !== "playing") return;
@@ -154,22 +174,35 @@ export const useGameStore = create<GameState>((set, get) => ({
     // Gradually increase speed
     const speed = Math.min(OBSTACLE_SPEED + distance * 0.00003, 1.2);
 
-    // Update jump
+    // Update jump (hold to jump higher)
     let { isJumping, jumpProgress, isSliding, slideProgress } = state;
+    let jumpPower = state.jumpPower;
     if (isJumping) {
-      jumpProgress += 0.04;
+      const isAscending = jumpProgress < 0.5;
+      if (state.isJumpHeld && isAscending) {
+        jumpProgress += 0.025;
+        jumpPower = Math.min(jumpPower + 0.12, 6.0);
+      } else {
+        jumpProgress += 0.04;
+      }
       if (jumpProgress >= 1) {
         isJumping = false;
         jumpProgress = 0;
+        jumpPower = 3.5;
       }
     }
 
-    // Update slide
+    // Update slide (hold to stay sliding)
     if (isSliding) {
       slideProgress += 0.04;
       if (slideProgress >= 1) {
-        isSliding = false;
-        slideProgress = 0;
+        if (state.isSlideHeld) {
+          // keep looping while held
+          slideProgress = 0;
+        } else {
+          isSliding = false;
+          slideProgress = 0;
+        }
       }
     }
 
@@ -187,17 +220,20 @@ export const useGameStore = create<GameState>((set, get) => ({
       });
     }
 
-    // Spawn hearts
+    // Spawn hearts in chains
     let hearts = [...state.hearts];
     let nextHeartId = state.nextHeartId;
     if (frameCount % HEART_SPAWN_INTERVAL === 0) {
       const lane = Math.floor(Math.random() * 3) - 1;
-      hearts.push({
-        id: nextHeartId++,
-        lane,
-        z: -120,
-        collected: false,
-      });
+      const chainLength = 3 + Math.floor(Math.random() * 4); // 3-6 hearts in a row
+      for (let i = 0; i < chainLength; i++) {
+        hearts.push({
+          id: nextHeartId++,
+          lane,
+          z: -120 - i * 4,
+          collected: false,
+        });
+      }
     }
 
     // Move obstacles & hearts
@@ -211,7 +247,9 @@ export const useGameStore = create<GameState>((set, get) => ({
     // Collision detection
     const playerX = state.playerLane * LANE_WIDTH;
     const playerZ = 0;
-    const playerY = isJumping ? Math.sin(jumpProgress * Math.PI) * 3.5 : 0;
+    const playerY = isJumping
+      ? Math.sin(jumpProgress * Math.PI) * jumpPower
+      : 0;
     const slidingNow = isSliding;
 
     for (const obs of obstacles) {
@@ -219,7 +257,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       const dx = Math.abs(playerX - obsX);
       const dz = Math.abs(playerZ - obs.z);
 
-      if (dx < 2 && dz < 2) {
+      if (dx < 1.8 && dz < 1.5) {
         // If jumping over box, skip
         if (obs.type === "box" && playerY > 1.8) continue;
         // If sliding under barrier, skip
@@ -280,6 +318,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       heartsCollected,
       isJumping,
       jumpProgress,
+      jumpPower,
       isSliding,
       slideProgress,
       obstacles,
